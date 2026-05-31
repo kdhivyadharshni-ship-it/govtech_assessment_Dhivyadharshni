@@ -1,12 +1,17 @@
-```python
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
 import pandas as pd
 import sqlite3
 from sqlalchemy import create_engine , text
 
-```
+
+# In[ ]:
 
 
-```python
 # Read CSV
 pd.read_csv("data/enrolments.csv")
 
@@ -17,10 +22,11 @@ pd.read_csv("data/enrolments.csv")
 df["course_date"] = pd.to_datetime(df["course_date"], errors = "coerce", format ="mixed")
 df["course_date"] = df["course_date"].dt.date
 # df.info()
-```
 
 
-```python
+# In[ ]:
+
+
 # if the python verion doesn't support format = "mixed"
 # from dateutil.parser import parse
 
@@ -31,10 +37,11 @@ df["course_date"] = df["course_date"].dt.date
 #         return None
 
 # df["course_date"] = df["course_date"].apply(parse_date)
-```
 
 
-```python
+# In[ ]:
+
+
 # To run this code
 # Create SQLite database
 # Create engine
@@ -52,10 +59,11 @@ df["course_date"] = df["course_date"].dt.date
 # conn.execute(text("""drop table if exists enrolments"""))
 # conn.execute(text("""drop table if exists bronze_enrolments"""))
 # conn.execute(text("""drop table if exists silver_enrolments"""))
-```
 
 
-```python
+# In[ ]:
+
+
 # Create SQLite database
 # Create engine
 engine = create_engine("sqlite:///courses.db")
@@ -92,29 +100,31 @@ PRAGMA table_info(courses)
 """, engine)
 
 conn.commit()
-```
 
 
-```python
+# In[ ]:
+
+
 pd.read_sql("""
 SELECT name
 FROM sqlite_master
 WHERE type='table'
 """, engine)
 
-```
+
+# In[ ]:
 
 
-```python
 pd.read_sql("""
 SELECT *
 FROM courses
 LIMIT 5
 """, conn)
-```
 
 
-```python
+# In[ ]:
+
+
 #BRONZE LAYER - Ingestion Timestamp ,sourcefile 
 
 conn.execute(text("""
@@ -142,15 +152,11 @@ pd.read_sql(
 pd.read_sql("""
 PRAGMA table_info(bronze_enrolments)
 """, engine)
-```
 
 
-```python
-
-```
+# In[ ]:
 
 
-```python
 conn.execute (text("""
 CREATE TABLE silver_courses (
     course_id INTEGER PRIMARY KEY,
@@ -196,10 +202,12 @@ CREATE TABLE rejected_courses (
     rejection_reason TEXT,
     ingestion_timestamp TEXT
 );"""))
-```
+conn.commit()
 
 
-```python
+# In[ ]:
+
+
 # conn.execute(text("DELETE FROM silver_courses"))
 # conn.execute(text("DELETE FROM silver_enrolments"))
 
@@ -232,15 +240,12 @@ WHERE course_id IS NOT NULL
         OR json_valid(prerequisites) = 1
       )
 """))
-```
+conn.commit()
 
 
-```python
-
-```
+# In[ ]:
 
 
-```python
 conn.execute(text("""
 INSERT INTO rejected_enrolments
 SELECT
@@ -261,7 +266,7 @@ SELECT
         WHEN amount < 0 THEN 'Negative amount'
         WHEN subsidy < 0 THEN 'Negative subsidy'
         WHEN credits_used < 0 THEN 'Negative credits_used'
-        
+
     END,
     CURRENT_TIMESTAMP
 FROM bronze_enrolments
@@ -305,27 +310,30 @@ WHERE enrollment_id IS NOT NULL
   AND subsidy >= 0
   AND credits_used >= 0
 """))
+conn.commit()
 
-```
+
+# In[ ]:
 
 
-```python
 display(pd.read_sql("select * from silver_courses",conn))
 display(pd.read_sql("select * from silver_enrolments",conn))
 display(pd.read_sql("select * from rejected_courses",conn))
 display(pd.read_sql("select * from rejected_enrolments",conn))
-```
 
 
-```python
+# In[ ]:
+
+
 # try:
 #     conn.close()
 # except:
 #     pass
-```
 
 
-```python
+# In[ ]:
+
+
 # Gold Layer
 # Prefer star schema to implement this 
 
@@ -400,19 +408,20 @@ SELECT
 FROM silver_enrolments
 GROUP BY month;"""))
 
+conn.commit()
 
 
 
-```
+# In[ ]:
 
 
-```python
 display(pd.read_sql("select * from gold_monthly_summary",conn))
 display(pd.read_sql("select * from gold_course_summary",conn))
-```
 
 
-```python
+# In[ ]:
+
+
 #participants that have registered for courses without meeting the prerequisites
 
 pd.read_sql("""WITH prerequisite_courses AS (
@@ -461,24 +470,3 @@ FROM missing_prerequisites
 ORDER BY participant_id, course_id;""",engine)
 
 
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
-
-```python
-
-```
