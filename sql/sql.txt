@@ -1,4 +1,4 @@
-#participants that have registered for courses without meeting the prerequisites
+#participants that have registered for courses without meeting the prerequisites.
 
 WITH prerequisite_courses AS (
 
