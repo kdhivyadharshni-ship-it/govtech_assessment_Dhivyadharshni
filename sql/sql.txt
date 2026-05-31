@@ -1,0 +1,46 @@
+#participants that have registered for courses without meeting the prerequisites
+
+WITH prerequisite_courses AS (
+
+    SELECT
+        e.enrollment_id,
+        e.participant_id,
+        e.participant_name,
+        e.course_id,
+        e.course_date,
+        json_each.value AS prerequisite_course_id
+
+    FROM enrolments e
+
+    JOIN courses c
+        ON e.course_id = c.course_id
+
+    JOIN json_each(c.prerequisites)
+
+),
+
+missing_prerequisites AS (
+
+    SELECT
+        pc.*
+
+    FROM prerequisite_courses pc
+
+    LEFT JOIN enrolments completed
+
+        ON pc.participant_id = completed.participant_id
+
+        AND completed.course_id = pc.prerequisite_course_id
+
+        AND completed.course_date < pc.course_date
+
+    WHERE completed.course_id IS NULL
+)
+
+SELECT
+    participant_id,
+    participant_name,
+    course_id,
+    prerequisite_course_id AS missing_prerequisite
+FROM missing_prerequisites
+ORDER BY participant_id, course_id;
